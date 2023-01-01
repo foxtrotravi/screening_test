@@ -9,3 +9,9 @@ const bold24Dark = TextStyle(
   fontSize: 24,
   color: Colors.black,
 );
+
+const bold24LightGrey = TextStyle(
+  fontWeight: FontWeight.bold,
+  fontSize: 24,
+  color: Colors.black45,
+);

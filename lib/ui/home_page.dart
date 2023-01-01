@@ -25,6 +25,9 @@ class _HomePageState extends State<HomePage> {
   final _collegeController = TextEditingController();
   final _collegeFocusNode = FocusNode();
 
+  final _passwordController = TextEditingController();
+  final _passwordFocusNode = FocusNode();
+
   final _formKey = GlobalKey<FormState>();
 
   var _highestDegree = 'Select your highest degree'.toLowerCase();
@@ -55,21 +58,23 @@ class _HomePageState extends State<HomePage> {
     '5+ years',
   ];
 
+  bool isAdmin = false;
+  bool isObscuring = true;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Row(
         children: [
           Expanded(
-            flex: 4,
+            flex: 5,
             child: Container(
               alignment: Alignment.topLeft,
               child: const Instructions(),
             ),
           ),
-          const Spacer(),
           Expanded(
-            flex: 2,
+            flex: 3,
             child: Container(
               color: darkGrey,
               alignment: Alignment.topLeft,
@@ -77,126 +82,20 @@ class _HomePageState extends State<HomePage> {
               child: Form(
                 key: _formKey,
                 child: Card(
-                  child: ListView(
-                    shrinkWrap: true,
-                    padding: const EdgeInsets.all(40),
+                  child: Column(
                     children: [
-                      Container(
-                        alignment: Alignment.centerLeft,
-                        child: const Text('Login', style: bold24Dark),
-                      ),
-                      const SizedBox(height: 40),
-                      CommonTextField(
-                        controller: _nameController,
-                        focusNode: _nameFocusNode,
-                        hintText: 'Full name',
-                        validator: _fullNameValidator,
-                        iconData: FeatherIcons.user,
-                      ),
-                      const SizedBox(height: 20),
-                      CommonTextField(
-                        controller: _emailController,
-                        focusNode: _emailFocusNode,
-                        hintText: 'Email',
-                        validator: _emailValidator,
-                        iconData: FeatherIcons.mail,
-                      ),
-                      const SizedBox(height: 20),
-                      CommonTextField(
-                        controller: _phoneNumberController,
-                        focusNode: _phoneNumberFocusNode,
-                        hintText: 'Phone number',
-                        validator: _phoneNumberValidator,
-                        isPhoneNumber: true,
-                        iconData: FeatherIcons.phone,
-                      ),
-                      const SizedBox(height: 20),
-                      CommonTextField(
-                        controller: _collegeController,
-                        focusNode: _collegeFocusNode,
-                        hintText: 'College',
-                        validator: _collegeValidator,
-                        iconData: Icons.school_outlined,
-                      ),
-                      const SizedBox(height: 20),
-                      // Highest Degree
-                      DropdownButtonFormField(
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                        ),
-                        value: _highestDegree,
-                        validator: _highestDegreeValidator,
-                        items: _highestDegreeOptions
-                            .map(
-                              (e) => DropdownMenuItem(
-                                value: e.toLowerCase(),
-                                child: Text(e),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (String? selectedOption) {
-                          if (selectedOption != null) {
-                            _highestDegree = selectedOption;
-                          }
-                          setState(() {});
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      // Working status
-                      DropdownButtonFormField(
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                        ),
-                        value: _workingStatus,
-                        validator: _workingStatusValidator,
-                        items: _workingStatusOptions
-                            .map(
-                              (e) => DropdownMenuItem(
-                                value: e.toLowerCase(),
-                                child: Text(e),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (String? selectedOption) {
-                          if (selectedOption != null) {
-                            _workingStatus = selectedOption;
-                          }
-                          setState(() {});
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      // Years of experience
-                      DropdownButtonFormField(
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: _yearsOfExperienceValidator,
-                        value: _yearsOfExperience,
-                        items: _yearsOfExperienceOptions
-                            .map(
-                              (e) => DropdownMenuItem(
-                                value: e.toLowerCase(),
-                                child: Text(e),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (String? selectedOption) {
-                          if (selectedOption != null) {
-                            _yearsOfExperience = selectedOption;
-                          }
-                          setState(() {});
-                        },
-                      ),
-                      // Resume upload button
-                      const SizedBox(height: 40),
-                      ElevatedButton(
-                        onPressed: validateAndSubmit,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          alignment: Alignment.center,
-                          child: const Text('Start test'),
+                      Expanded(
+                        child: ListView(
+                          shrinkWrap: true,
+                          padding: const EdgeInsets.all(40),
+                          children: [
+                            _buildLoginType(),
+                            const SizedBox(height: 40),
+                            ...form(),
+                          ],
                         ),
                       ),
+                      _buildSubmit(),
                     ],
                   ),
                 ),
@@ -208,6 +107,59 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Container _buildSubmit() {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 40,
+        vertical: 20,
+      ),
+      child: ElevatedButton(
+        onPressed: validateAndSubmit,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          alignment: Alignment.center,
+          child: Text(isAdmin ? 'Login' : 'Start test'),
+        ),
+      ),
+    );
+  }
+
+  Row _buildLoginType() {
+    return Row(
+      children: [
+        InkWell(
+          onTap: () {
+            setState(() {
+              isAdmin = false;
+            });
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              'Candidate',
+              style: isAdmin ? bold24LightGrey : bold24Dark,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        InkWell(
+          onTap: () {
+            setState(() {
+              isAdmin = true;
+            });
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              'Admin',
+              style: isAdmin ? bold24Dark : bold24LightGrey,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   void validateAndSubmit() {
     if (_formKey.currentState!.validate()) {
       submit();
@@ -216,13 +168,18 @@ class _HomePageState extends State<HomePage> {
 
   void submit() {
     // Todo: Implement submit
-    debugPrint('Full name: ${_nameController.text}');
-    debugPrint('Email: ${_emailController.text}');
-    debugPrint('Phone: ${_phoneNumberController.text}');
-    debugPrint('College: ${_collegeController.text}');
-    debugPrint('Highest degree: $_highestDegree');
-    debugPrint('Working status: $_workingStatus');
-    debugPrint('Years of experience: $_yearsOfExperience');
+    if (isAdmin) {
+      debugPrint('Email: ${_emailController.text}');
+      debugPrint('Password: ${_passwordController.text}');
+    } else {
+      debugPrint('Full name: ${_nameController.text}');
+      debugPrint('Email: ${_emailController.text}');
+      debugPrint('Phone: ${_phoneNumberController.text}');
+      debugPrint('College: ${_collegeController.text}');
+      debugPrint('Highest degree: $_highestDegree');
+      debugPrint('Working status: $_workingStatus');
+      debugPrint('Years of experience: $_yearsOfExperience');
+    }
   }
 
   String? _fullNameValidator(String? fullName) {
@@ -267,5 +224,153 @@ class _HomePageState extends State<HomePage> {
       return "Highest degree can't be empty";
     }
     return null;
+  }
+
+  List<Widget> form() {
+    final widgets = <Widget>[];
+    if (isAdmin) {
+      final adminForm = <Widget>[
+        CommonTextField(
+          controller: _emailController,
+          focusNode: _emailFocusNode,
+          hintText: 'Email',
+          validator: _emailValidator,
+          iconData: FeatherIcons.mail,
+        ),
+        const SizedBox(height: 20),
+        TextFormField(
+          decoration: InputDecoration(
+            border: const OutlineInputBorder(),
+            hintText: 'Password',
+            suffix: SizedBox(
+              height: 24,
+              width: 24,
+              child: IconButton(
+                iconSize: 14,
+                onPressed: () {
+                  setState(() {
+                    isObscuring = !isObscuring;
+                  });
+                },
+                icon:
+                    Icon(isObscuring ? FeatherIcons.eyeOff : FeatherIcons.eye),
+              ),
+            ),
+            isDense: true,
+          ),
+          controller: _passwordController,
+          focusNode: _passwordFocusNode,
+          obscureText: isObscuring,
+        )
+      ];
+      widgets.addAll(adminForm);
+    } else {
+      const dropdownDecoration = InputDecoration(
+        border: OutlineInputBorder(),
+        isDense: true,
+      );
+
+      final candidateForm = [
+        CommonTextField(
+          controller: _nameController,
+          focusNode: _nameFocusNode,
+          hintText: 'Full name',
+          validator: _fullNameValidator,
+          iconData: FeatherIcons.user,
+        ),
+        const SizedBox(height: 20),
+        CommonTextField(
+          controller: _emailController,
+          focusNode: _emailFocusNode,
+          hintText: 'Email',
+          validator: _emailValidator,
+          iconData: FeatherIcons.mail,
+        ),
+        const SizedBox(height: 20),
+        CommonTextField(
+          controller: _phoneNumberController,
+          focusNode: _phoneNumberFocusNode,
+          hintText: 'Phone number',
+          validator: _phoneNumberValidator,
+          isPhoneNumber: true,
+          iconData: FeatherIcons.phone,
+        ),
+        const SizedBox(height: 20),
+        CommonTextField(
+          controller: _collegeController,
+          focusNode: _collegeFocusNode,
+          hintText: 'College',
+          validator: _collegeValidator,
+          iconData: Icons.school_outlined,
+        ),
+        const SizedBox(height: 20),
+        // Highest Degree
+        DropdownButtonFormField(
+          decoration: dropdownDecoration,
+          value: _highestDegree,
+          validator: _highestDegreeValidator,
+          items: _highestDegreeOptions
+              .map(
+                (e) => DropdownMenuItem(
+                  value: e.toLowerCase(),
+                  child: Text(e),
+                ),
+              )
+              .toList(),
+          onChanged: (String? selectedOption) {
+            if (selectedOption != null) {
+              _highestDegree = selectedOption;
+            }
+            setState(() {});
+          },
+        ),
+        const SizedBox(height: 20),
+        // Working status
+        DropdownButtonFormField(
+          decoration: dropdownDecoration,
+          value: _workingStatus,
+          validator: _workingStatusValidator,
+          items: _workingStatusOptions
+              .map(
+                (e) => DropdownMenuItem(
+                  value: e.toLowerCase(),
+                  child: Text(e),
+                ),
+              )
+              .toList(),
+          onChanged: (String? selectedOption) {
+            if (selectedOption != null) {
+              _workingStatus = selectedOption;
+            }
+            setState(() {});
+          },
+        ),
+        const SizedBox(height: 20),
+        // Years of experience
+        DropdownButtonFormField(
+          decoration: dropdownDecoration,
+          validator: _yearsOfExperienceValidator,
+          value: _yearsOfExperience,
+          items: _yearsOfExperienceOptions
+              .map(
+                (e) => DropdownMenuItem(
+                  value: e.toLowerCase(),
+                  child: Text(e),
+                ),
+              )
+              .toList(),
+          onChanged: (String? selectedOption) {
+            if (selectedOption != null) {
+              _yearsOfExperience = selectedOption;
+            }
+            setState(() {});
+          },
+        ),
+        // Resume upload button
+        const SizedBox(height: 40)
+      ];
+      widgets.addAll(candidateForm);
+    }
+    return widgets;
   }
 }

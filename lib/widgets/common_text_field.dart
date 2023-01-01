@@ -26,6 +26,7 @@ class CommonTextField extends StatelessWidget {
         hintText: hintText,
         suffixIcon: Icon(iconData),
         prefixText: isPhoneNumber ? '+91' : null,
+        isDense: true,
       ),
       controller: controller,
       focusNode: focusNode,
