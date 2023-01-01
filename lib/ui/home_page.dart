@@ -87,7 +87,10 @@ class _HomePageState extends State<HomePage> {
                       Expanded(
                         child: ListView(
                           shrinkWrap: true,
-                          padding: const EdgeInsets.all(40),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 20,
+                            horizontal: 40,
+                          ),
                           children: [
                             _buildLoginType(),
                             const SizedBox(height: 40),
@@ -109,10 +112,7 @@ class _HomePageState extends State<HomePage> {
 
   Container _buildSubmit() {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 40,
-        vertical: 20,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
       child: ElevatedButton(
         onPressed: validateAndSubmit,
         child: Container(
