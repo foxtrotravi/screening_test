@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:screening_test/ui/home_page.dart';
+import 'package:screening_test/utils/theme.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,8 +13,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Screening Test',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.orange,
       ),
       home: const HomePage(),
     );
