@@ -1,5 +1,11 @@
+import 'dart:html' as html;
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:feather_icons/feather_icons.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:screening_test/ui/admin_page.dart';
+import 'package:screening_test/ui/test_page.dart';
 import 'package:screening_test/utils/theme.dart';
 import 'package:screening_test/utils/utils.dart';
 import 'package:screening_test/widgets/common_text_field.dart';
@@ -60,49 +66,62 @@ class _HomePageState extends State<HomePage> {
 
   bool isAdmin = false;
   bool isObscuring = true;
+  bool isLoading = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Row(
+      body: Stack(
         children: [
-          Expanded(
-            flex: 5,
-            child: Container(
-              alignment: Alignment.topLeft,
-              child: const Instructions(),
-            ),
-          ),
-          Expanded(
-            flex: 3,
-            child: Container(
-              color: darkGrey,
-              alignment: Alignment.topLeft,
-              padding: const EdgeInsets.all(40),
-              child: Form(
-                key: _formKey,
-                child: Card(
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: ListView(
-                          shrinkWrap: true,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 20,
-                            horizontal: 40,
+          Row(
+            children: [
+              Expanded(
+                flex: 5,
+                child: Container(
+                  alignment: Alignment.topLeft,
+                  child: const Instructions(),
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: Container(
+                  color: darkGrey,
+                  alignment: Alignment.topLeft,
+                  padding: const EdgeInsets.all(40),
+                  child: Form(
+                    key: _formKey,
+                    child: Card(
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: ListView(
+                              shrinkWrap: true,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 20,
+                                horizontal: 40,
+                              ),
+                              children: [
+                                _buildLoginType(),
+                                const SizedBox(height: 40),
+                                ...form(),
+                              ],
+                            ),
                           ),
-                          children: [
-                            _buildLoginType(),
-                            const SizedBox(height: 40),
-                            ...form(),
-                          ],
-                        ),
+                          _buildSubmit(),
+                        ],
                       ),
-                      _buildSubmit(),
-                    ],
+                    ),
                   ),
                 ),
               ),
+            ],
+          ),
+          Visibility(
+            visible: isLoading,
+            child: Container(
+              color: Colors.white10,
+              alignment: Alignment.center,
+              child: const CircularProgressIndicator(),
             ),
           ),
         ],
@@ -160,18 +179,24 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void validateAndSubmit() {
+  void validateAndSubmit() async {
+    goFullScreen();
+
     if (_formKey.currentState!.validate()) {
+      setState(() => isLoading = true);
       submit();
     }
   }
 
-  void submit() {
+  void submit() async {
     // Todo: Implement submit
     if (isAdmin) {
       debugPrint('Email: ${_emailController.text}');
       debugPrint('Password: ${_passwordController.text}');
+      _login();
     } else {
+      _handleCandidateLogin();
+
       debugPrint('Full name: ${_nameController.text}');
       debugPrint('Email: ${_emailController.text}');
       debugPrint('Phone: ${_phoneNumberController.text}');
@@ -372,5 +397,97 @@ class _HomePageState extends State<HomePage> {
       widgets.addAll(candidateForm);
     }
     return widgets;
+  }
+
+  Future<void> _handleCandidateLogin() async {
+    try {
+      final credential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _emailController.text.trim(),
+      );
+
+      setState(() {
+        isLoading = false;
+      });
+
+      _navigateToTest();
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'weak-password') {
+        showToast('The password provided is too weak.');
+      } else if (e.code == 'email-already-in-use') {
+        showToast('The account already exists for that email. Logging your in');
+        _login();
+      }
+    } catch (e) {
+      showToast(e.toString());
+    }
+  }
+
+  Future<void> _login() async {
+    try {
+      final password =
+          isAdmin ? _passwordController.text : _emailController.text;
+
+      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: password.trim(),
+      );
+
+      final user = <String, dynamic>{};
+
+      user['email'] = _emailController.text.trim();
+      user['isAdmin'] = isAdmin;
+      user['uid'] = credential.user!.uid;
+
+      if (!isAdmin) {
+        user['name'] = _nameController.text.trim();
+        user['phoneNumber'] = _phoneNumberController.text.trim();
+        user['college'] = _collegeController.text.trim();
+        user['highestDegree'] = _highestDegree.trim();
+        user['workingStatus'] = _workingStatus.trim();
+        user['yearsOfExperience'] = _yearsOfExperience.trim();
+      }
+
+      final db = FirebaseFirestore.instance;
+
+      final snapshot = await db.collection('users').doc(user['uid']).get();
+
+      if (snapshot.data() == null) {
+        final users = db.collection('users');
+        final doc = users.doc(user['uid']);
+        await doc.set(user);
+      }
+
+      setState(() {
+        isLoading = false;
+      });
+
+      if (isAdmin) {
+        _navigateToAdmin();
+      } else {
+        _navigateToTest();
+      }
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        showToast('No user found for that email.');
+      } else if (e.code == 'wrong-password') {
+        showToast('Wrong password provided for that user.');
+      }
+    }
+  }
+
+  void _navigateToTest() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const TestPage()),
+    );
+  }
+
+  void _navigateToAdmin() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const AdminPage()),
+    );
   }
 }
