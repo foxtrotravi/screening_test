@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:screening_test/models/question.dart';
+import 'package:screening_test/ui/upload_resume.dart';
 import 'package:screening_test/utils/utils.dart';
 
 class TestPage extends StatefulWidget {
@@ -202,7 +203,15 @@ class _TestPageState extends State<TestPage> {
         });
         await Future.delayed(const Duration(seconds: 4));
         showToast('Test submitted successfully');
+        navigateToUploadResume();
       }
     });
+  }
+
+  void navigateToUploadResume() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const UploadResumePage()),
+    );
   }
 }

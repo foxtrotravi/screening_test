@@ -30,3 +30,12 @@ String showTimer(int time) {
 String twoDigit(int t) {
   return t < 10 ? '0$t' : '$t';
 }
+
+String getTimeStamp() {
+  final now = DateTime.now();
+  final yyyy = now.year;
+  final mm = twoDigit(now.month);
+  final dd = twoDigit(now.day);
+
+  return '$yyyy-$mm-$dd';
+}
