@@ -165,6 +165,13 @@ class _UploadResumePageState extends State<UploadResumePage> {
 
     if (result != null) {
       debugPrint('User picked file');
+      final size = result.files.first.size;
+      debugPrint('File size: $size');
+      if (size >= 5242880) {
+        showToast('File size should be less than 5 MB');
+        return;
+      }
+
       Uint8List fileBytes = result.files.first.bytes!;
       fileName = result.files.first.name;
       debugPrint('Picked file: $fileName');
