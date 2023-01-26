@@ -1,5 +1,3 @@
-import 'dart:html' as html;
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:feather_icons/feather_icons.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -73,49 +71,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       body: Stack(
         children: [
-          Row(
-            children: [
-              Expanded(
-                flex: 5,
-                child: Container(
-                  alignment: Alignment.topLeft,
-                  child: const Instructions(),
-                ),
-              ),
-              Expanded(
-                flex: 3,
-                child: Container(
-                  color: darkGrey,
-                  alignment: Alignment.topLeft,
-                  padding: const EdgeInsets.all(40),
-                  child: Form(
-                    key: _formKey,
-                    child: Card(
-                      child: Column(
-                        children: [
-                          Expanded(
-                            child: ListView(
-                              shrinkWrap: true,
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 20,
-                                horizontal: 40,
-                              ),
-                              children: [
-                                _buildLoginType(),
-                                const SizedBox(height: 40),
-                                ...form(),
-                              ],
-                            ),
-                          ),
-                          _buildSubmit(),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+          _buildBody(),
           Visibility(
             visible: isLoading,
             child: Container(
@@ -126,6 +82,113 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
+    );
+  }
+
+  StreamBuilder<User?> _buildBody() {
+    return StreamBuilder(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (BuildContext context, snapshot) {
+        if (snapshot.hasError) {
+          return const Center(child: Text('Something went wrong'));
+        }
+
+        switch (snapshot.connectionState) {
+          case ConnectionState.none:
+            return const SizedBox();
+          case ConnectionState.waiting:
+            return _loginWidget();
+          case ConnectionState.active:
+          case ConnectionState.done:
+            if (snapshot.hasData) {
+              final user = snapshot.data;
+              if (user != null) {
+                return FutureBuilder(
+                  future: FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(user.uid)
+                      .get(),
+                  builder: ((context, _snapshot) {
+                    if (snapshot.hasError) {
+                      return const Center(
+                        child: Text('Something went wrong'),
+                      );
+                    }
+
+                    switch (snapshot.connectionState) {
+                      case ConnectionState.none:
+                      case ConnectionState.waiting:
+                        return const CircularProgressIndicator();
+                      case ConnectionState.active:
+                      case ConnectionState.done:
+                        final collectionUser = _snapshot.data?.data();
+                        if (collectionUser != null) {
+                          final isAdmin = collectionUser['isAdmin'];
+                          if (isAdmin) {
+                            return const AdminPage();
+                          } else {
+                            return const TestPage();
+                          }
+                        }
+                    }
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }),
+                );
+              } else {
+                return _loginWidget();
+              }
+            }
+        }
+        return _loginWidget();
+      },
+    );
+  }
+
+  Row _loginWidget() {
+    return Row(
+      children: [
+        Expanded(
+          flex: 5,
+          child: Container(
+            alignment: Alignment.topLeft,
+            child: const Instructions(),
+          ),
+        ),
+        Expanded(
+          flex: 3,
+          child: Container(
+            color: darkGrey,
+            alignment: Alignment.topLeft,
+            padding: const EdgeInsets.all(40),
+            child: Form(
+              key: _formKey,
+              child: Card(
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: ListView(
+                        shrinkWrap: true,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 20,
+                          horizontal: 40,
+                        ),
+                        children: [
+                          _buildLoginType(),
+                          const SizedBox(height: 40),
+                          ...form(),
+                        ],
+                      ),
+                    ),
+                    _buildSubmit(),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -180,8 +243,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   void validateAndSubmit() async {
-    goFullScreen();
-
     if (_formKey.currentState!.validate()) {
       setState(() => isLoading = true);
       submit();
@@ -189,12 +250,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   void submit() async {
-    // Todo: Implement submit
     if (isAdmin) {
       debugPrint('Email: ${_emailController.text}');
       debugPrint('Password: ${_passwordController.text}');
       _login();
     } else {
+      goFullScreen();
       _handleCandidateLogin();
 
       debugPrint('Full name: ${_nameController.text}');
