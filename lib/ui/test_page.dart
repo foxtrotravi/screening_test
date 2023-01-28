@@ -1,7 +1,12 @@
 import 'dart:async';
+import 'dart:math';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:screening_test/models/question.dart';
+import 'package:screening_test/models/score.dart';
+import 'package:screening_test/models/test_submission.dart';
 import 'package:screening_test/ui/upload_resume.dart';
 import 'package:screening_test/utils/utils.dart';
 
@@ -152,9 +157,60 @@ class _TestPageState extends State<TestPage> {
       _isLoading = true;
       loadingMessage = 'Loading questions';
     });
-    questions = await Question.dummyData();
+    final querySnapshot =
+        await FirebaseFirestore.instance.collection('questions').get();
+    final allQuestions = <Question>[];
+    querySnapshot.docs.forEach((doc) {
+      allQuestions.add(Question.fromJson(doc.data()));
+    });
+
+    final lvlOne = <Question>[];
+    final lvlTwo = <Question>[];
+    final lvlThree = <Question>[];
+    final lvlFour = <Question>[];
+
+    allQuestions.forEach((q) {
+      switch (q.level) {
+        case 1:
+          lvlOne.add(q);
+          break;
+        case 2:
+          lvlTwo.add(q);
+          break;
+        case 3:
+          lvlThree.add(q);
+          break;
+        case 4:
+          lvlFour.add(q);
+          break;
+      }
+    });
+
+    // 2 questions from each level
+    addTwoQuestions(lvlOne);
+    addTwoQuestions(lvlTwo);
+    addTwoQuestions(lvlThree);
+    addTwoQuestions(lvlFour);
+
+    // questions = await Question.dummyData();
     selectedOptions = List<String>.filled(questions.length, '');
     startTimer();
+  }
+
+  void addTwoQuestions(List<Question> list) {
+    final random = Random();
+    final indexes = <int>{};
+
+    while (true) {
+      indexes.add(random.nextInt(list.length));
+      if (indexes.length >= 2 || indexes.length >= list.length) {
+        break;
+      }
+    }
+
+    indexes.forEach((index) {
+      questions.add(list[index]);
+    });
   }
 
   Future<void> startTimer() async {
@@ -201,11 +257,50 @@ class _TestPageState extends State<TestPage> {
           _isLoading = true;
           loadingMessage = 'Submitting test';
         });
-        await Future.delayed(const Duration(seconds: 4));
+
+        await uploadToFirebase();
         showToast('Test submitted successfully');
         navigateToUploadResume();
       }
     });
+  }
+
+  Future<void> uploadToFirebase() async {
+    final questionIds = <String>[];
+    final scoreArray = List.filled(4, 0);
+
+    for (int i = 0; i < questions.length; i++) {
+      final q = questions[i];
+      final isCorrect =
+          selectedOptions[i].toLowerCase() == q.correctOption.toLowerCase();
+      questionIds.add(q.uid!);
+      scoreArray[q.level - 1] += (isCorrect ? 1 : 0);
+    }
+
+    final score = Score(
+      level1: scoreArray[0],
+      level2: scoreArray[1],
+      level3: scoreArray[2],
+      level4: scoreArray[3],
+    );
+
+    try {
+      final doc = FirebaseFirestore.instance.collection('testSubmission').doc();
+
+      final testSubmission = TestSubmission(
+        uid: doc.id,
+        userId: FirebaseAuth.instance.currentUser!.uid,
+        score: score,
+        questionIds: questions.map((e) => e.uid!).toList(),
+        answers: selectedOptions,
+        createdAt: DateTime.now().millisecondsSinceEpoch,
+      );
+
+      await doc.set(testSubmission.toJson());
+    } catch (e) {
+      debugPrint(e.toString());
+      showToast('Something went wrong');
+    }
   }
 
   void navigateToUploadResume() {
