@@ -1,4 +1,5 @@
 import 'dart:html';
+import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 extension EmailValidator on String {
@@ -17,7 +18,12 @@ void showToast(String msg) {
 }
 
 void goFullScreen() {
-  document.documentElement?.requestFullscreen();
+  try {
+    document.documentElement?.requestFullscreen();
+  } catch (e) {
+    debugPrint('Something went wrong');
+    debugPrint(e.toString());
+  }
 }
 
 String showTimer(int time) {

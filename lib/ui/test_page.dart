@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:html';
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -27,6 +28,8 @@ class _TestPageState extends State<TestPage> {
   var selectedOptions = <String>[];
 
   final controller = PageController();
+  int count = 3;
+  bool isShowingDialog = false;
 
   @override
   void initState() {
@@ -36,13 +39,20 @@ class _TestPageState extends State<TestPage> {
 
   @override
   Widget build(BuildContext context) {
+    fullScreenListener();
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_startTimer ? showTimer(_time) : ''),
         actions: [
           TextButton(
-            onPressed: submitTest,
-            child: const Text('Finish & Submit Test'),
+            onPressed: submitTestConfirmation,
+            child: const Text(
+              'Finish & Submit Test',
+              style: TextStyle(
+                color: Colors.white,
+              ),
+            ),
           )
         ],
       ),
@@ -126,7 +136,7 @@ class _TestPageState extends State<TestPage> {
                                     curve: Curves.easeIn,
                                   );
                                 } else {
-                                  submitTest();
+                                  submitTestConfirmation();
                                 }
                               },
                               child: Text(
@@ -150,6 +160,30 @@ class _TestPageState extends State<TestPage> {
               ),
             ),
     );
+  }
+
+  void fullScreenListener() {
+    if (document.fullscreenElement != null) {
+      return;
+    }
+
+    if (!isShowingDialog) {
+      Timer(Duration.zero, () {
+        showWarningDialog();
+        if (count == 0) {
+          showToast('Alert: Submitting test');
+          submitTest(
+            msg:
+                'Submitting test as you exited fullscreen mode more than 3 times',
+          );
+        } else {
+          showToast('Alert: $count times left');
+          count--;
+          goFullScreen();
+        }
+        isShowingDialog = true;
+      });
+    }
   }
 
   Future<void> fetchQuestions() async {
@@ -192,7 +226,6 @@ class _TestPageState extends State<TestPage> {
     addTwoQuestions(lvlThree);
     addTwoQuestions(lvlFour);
 
-    // questions = await Question.dummyData();
     selectedOptions = List<String>.filled(questions.length, '');
     startTimer();
   }
@@ -208,9 +241,7 @@ class _TestPageState extends State<TestPage> {
       }
     }
 
-    indexes.forEach((index) {
-      questions.add(list[index]);
-    });
+    indexes.forEach((index) => questions.add(list[index]));
   }
 
   Future<void> startTimer() async {
@@ -226,12 +257,13 @@ class _TestPageState extends State<TestPage> {
         }
       } else {
         timer.cancel();
+        submitTest();
         debugPrint('stopped timer');
       }
     });
   }
 
-  Future<void> submitTest() async {
+  Future<void> submitTestConfirmation() async {
     showDialog<String>(
       context: context,
       builder: (context) {
@@ -253,16 +285,20 @@ class _TestPageState extends State<TestPage> {
       },
     ).then((value) async {
       if (value == 'Yes') {
-        setState(() {
-          _isLoading = true;
-          loadingMessage = 'Submitting test';
-        });
-
-        await uploadToFirebase();
-        showToast('Test submitted successfully');
-        navigateToUploadResume();
+        submitTest();
       }
     });
+  }
+
+  Future<void> submitTest({String msg = 'Submitting test'}) async {
+    setState(() {
+      _isLoading = true;
+      loadingMessage = msg;
+    });
+
+    await uploadToFirebase();
+    showToast('Test submitted successfully');
+    navigateToUploadResume();
   }
 
   Future<void> uploadToFirebase() async {
@@ -304,9 +340,33 @@ class _TestPageState extends State<TestPage> {
   }
 
   void navigateToUploadResume() {
-    Navigator.pushReplacement(
+    Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => const UploadResumePage()),
+      (_) => false,
+    );
+  }
+
+  void showWarningDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              setState(() {
+                isShowingDialog = false;
+              });
+            },
+            child: const Text('Ok'),
+          )
+        ],
+        content: const Text(
+          'Your test will be automatically submitted if you exit fullscreen.',
+        ),
+      ),
     );
   }
 }

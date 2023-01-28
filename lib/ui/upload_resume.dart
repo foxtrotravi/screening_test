@@ -51,13 +51,27 @@ class _UploadResumePageState extends State<UploadResumePage> {
                 const SizedBox(height: 16),
                 Visibility(
                   visible: uploadTask == null,
-                  child: OutlinedButton(
-                    onPressed: () {
-                      pickFile();
-                    },
-                    child: const Center(
-                      child: Text('Choose resume'),
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      OutlinedButton(
+                        onPressed: () {
+                          pickFile();
+                        },
+                        child: const Center(
+                          child: Text('Choose resume'),
+                        ),
+                      ),
+                      OutlinedButton(
+                        onPressed: () async {
+                          await FirebaseAuth.instance.signOut();
+                          navigateToHomePage();
+                        },
+                        child: const Center(
+                          child: Text('Skip resume & logout'),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 Visibility(
