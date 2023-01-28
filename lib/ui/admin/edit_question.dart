@@ -1,5 +1,7 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:feather_icons/feather_icons.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:screening_test/models/question.dart';
 import 'package:screening_test/utils/utils.dart';
@@ -30,6 +32,7 @@ class _EditQuestionPageState extends State<EditQuestionPage> {
   String selectedValue = '';
   late bool isCreate;
   final key = GlobalKey<FormState>();
+  TaskState? taskState;
 
   @override
   void initState() {
@@ -89,40 +92,77 @@ class _EditQuestionPageState extends State<EditQuestionPage> {
           ),
           widget.isEdit
               ? TextFormField(
-                  decoration: const InputDecoration(
-                    label: Text('Option A'),
+                  decoration: InputDecoration(
+                    label: const Text('Option A'),
+                    suffixIcon: OutlinedButton(
+                      onPressed: () async {
+                        await pickAndUploadToFirebase(optionAController);
+                      },
+                      child: const Text('Upload image'),
+                    ),
                   ),
                   controller: optionAController,
                   validator: validator,
                 )
-              : _buildListTile('A', widget.question!.answer.optionA),
+              : _buildListTile(
+                  'A',
+                  widget.question!.answer.optionA,
+                  widget.question!.answer.isUrlA,
+                ),
           widget.isEdit
               ? TextFormField(
-                  decoration: const InputDecoration(
-                    label: Text('Option B'),
+                  decoration: InputDecoration(
+                    label: const Text('Option B'),
+                    suffixIcon: OutlinedButton(
+                      onPressed: () async {
+                        await pickAndUploadToFirebase(optionBController);
+                      },
+                      child: const Text('Upload image'),
+                    ),
                   ),
                   controller: optionBController,
                   validator: validator,
                 )
-              : _buildListTile('B', widget.question!.answer.optionB),
+              : _buildListTile(
+                  'B',
+                  widget.question!.answer.optionB,
+                  widget.question!.answer.isUrlB,
+                ),
           widget.isEdit
               ? TextFormField(
-                  decoration: const InputDecoration(
-                    label: Text('Option C'),
+                  decoration: InputDecoration(
+                    label: const Text('Option C'),
+                    suffixIcon: OutlinedButton(
+                      onPressed: () async {
+                        await pickAndUploadToFirebase(optionCController);
+                      },
+                      child: const Text('Upload image'),
+                    ),
                   ),
                   controller: optionCController,
                   validator: validator,
                 )
-              : _buildListTile('C', widget.question!.answer.optionC),
+              : _buildListTile('C', widget.question!.answer.optionC,
+                  widget.question!.answer.isUrlC),
           widget.isEdit
               ? TextFormField(
-                  decoration: const InputDecoration(
-                    label: Text('Option D'),
+                  decoration: InputDecoration(
+                    label: const Text('Option D'),
+                    suffixIcon: OutlinedButton(
+                      onPressed: () async {
+                        await pickAndUploadToFirebase(optionDController);
+                      },
+                      child: const Text('Upload image'),
+                    ),
                   ),
                   controller: optionDController,
                   validator: validator,
                 )
-              : _buildListTile('D', widget.question!.answer.optionD),
+              : _buildListTile(
+                  'D',
+                  widget.question!.answer.optionD,
+                  widget.question!.answer.isUrlD,
+                ),
           const SizedBox(height: 20),
           Visibility(
             visible: widget.isEdit,
@@ -196,8 +236,9 @@ class _EditQuestionPageState extends State<EditQuestionPage> {
     );
   }
 
-  ListTile _buildListTile(String leading, String value) {
+  Widget _buildListTile(String leading, String value, bool isUrl) {
     bool isSelected = leading.toLowerCase() == widget.question!.correctOption;
+
     return ListTile(
       selected: isSelected,
       selectedTileColor: Colors.green[100],
@@ -209,7 +250,20 @@ class _EditQuestionPageState extends State<EditQuestionPage> {
               color: Colors.green,
             )
           : null,
-      title: Text(value),
+      title: isUrl
+          ? SizedBox(
+              height: 200,
+              child: CachedNetworkImage(
+                imageUrl: value,
+                errorWidget: (context, url, error) {
+                  return const Center(child: Icon(FeatherIcons.alertCircle));
+                },
+                placeholder: (context, url) {
+                  return const Center(child: CircularProgressIndicator());
+                },
+              ),
+            )
+          : Text(value),
     );
   }
 
@@ -232,10 +286,10 @@ class _EditQuestionPageState extends State<EditQuestionPage> {
       optionB: optionBController.text,
       optionC: optionCController.text,
       optionD: optionDController.text,
-      isUrlA: false,
-      isUrlB: false,
-      isUrlC: false,
-      isUrlD: false,
+      isUrlA: optionAController.text.startsWith('https'),
+      isUrlB: optionBController.text.startsWith('https'),
+      isUrlC: optionCController.text.startsWith('https'),
+      isUrlD: optionDController.text.startsWith('https'),
     );
 
     final question = Question(
@@ -269,5 +323,38 @@ class _EditQuestionPageState extends State<EditQuestionPage> {
       widget.onSubmitCallback(question);
       Navigator.of(context).pop();
     }
+  }
+
+  Future<void> pickAndUploadToFirebase(TextEditingController controller) async {
+    await pickFileUtil((file) async {
+      await uploadToFirebaseUtil(
+        file,
+        'questions/${file.name}',
+        ((state, reference, progress, {uploadTask}) async {
+          switch (state) {
+            case TaskState.paused:
+              taskState = TaskState.paused;
+              break;
+            case TaskState.running:
+              taskState = TaskState.running;
+              break;
+            case TaskState.success:
+              taskState = TaskState.success;
+              final downloadUrl = await reference.getDownloadURL();
+              controller.text = downloadUrl;
+              debugPrint('downloadUrl: $downloadUrl');
+              debugPrint('fullPath: ${reference.fullPath}');
+              break;
+            case TaskState.canceled:
+              taskState = TaskState.canceled;
+              break;
+            case TaskState.error:
+              taskState = TaskState.error;
+              break;
+          }
+          setState(() {});
+        }),
+      );
+    }, fileType: ['jpg', 'png']);
   }
 }

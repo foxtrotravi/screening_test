@@ -3,7 +3,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:screening_test/ui/home_page.dart';
 import 'package:screening_test/utils/utils.dart';
 
@@ -59,7 +58,7 @@ class _UploadResumePageState extends State<UploadResumePage> {
                           pickFile();
                         },
                         child: const Center(
-                          child: Text('Choose resume'),
+                          child: Text('Choose resume (doc, pdf, jpg)'),
                         ),
                       ),
                       OutlinedButton(
@@ -172,92 +171,70 @@ class _UploadResumePageState extends State<UploadResumePage> {
   }
 
   Future<void> pickFile() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['jpg', 'pdf', 'doc'],
-    );
+    await pickFileUtil(
+      (file) async {
+        debugPrint('User picked file');
+        final size = file.size;
+        debugPrint('File size: $size');
+        if (size >= 5242880) {
+          showToast('File size should be less than 5 MB');
+          return;
+        }
+        fileName = file.name;
+        debugPrint('Picked file: $fileName');
 
-    if (result != null) {
-      debugPrint('User picked file');
-      final size = result.files.first.size;
-      debugPrint('File size: $size');
-      if (size >= 5242880) {
-        showToast('File size should be less than 5 MB');
-        return;
-      }
-
-      Uint8List fileBytes = result.files.first.bytes!;
-      fileName = result.files.first.name;
-      debugPrint('Picked file: $fileName');
-
-      try {
         final timestamp = getTimeStamp();
-        ref = FirebaseStorage.instance.ref(
+        await uploadToFirebase(
+          file,
           'uploads/$timestamp-$fileName',
         );
-        // Uploading resume
-        uploadTask = ref!.putData(fileBytes);
+      },
+      fileType: ['pdf', 'doc', 'jpg', 'png'],
+    );
+  }
 
-        uploadTask!.snapshotEvents.listen(
-          (TaskSnapshot taskSnapshot) async {
-            progress = 100.0 *
-                (taskSnapshot.bytesTransferred / taskSnapshot.totalBytes);
-            debugPrint("Upload is $progress% complete.");
-            switch (taskSnapshot.state) {
-              case TaskState.paused:
-                debugPrint('Paused');
-                uploadState = UploadState.paused;
-                break;
-              case TaskState.running:
-                uploadState = UploadState.running;
-                break;
-              case TaskState.success:
-                debugPrint('Success');
-                uploadState = UploadState.success;
+  Future<void> uploadToFirebase(PlatformFile file, String referencePath) async {
+    await uploadToFirebaseUtil(
+      file,
+      referencePath,
+      (state, reference, progressPercentage, {uploadTask}) async {
+        this.uploadTask = uploadTask!;
+        progress = progressPercentage;
+        switch (state) {
+          case TaskState.paused:
+            uploadState = UploadState.paused;
+            break;
+          case TaskState.running:
+            uploadState = UploadState.running;
+            break;
+          case TaskState.success:
+            uploadState = UploadState.success;
+            showToast('Upload complete');
+            // Fetching download url
+            final downloadUrl = await reference.getDownloadURL();
+            debugPrint('Download url: $downloadUrl');
 
-                showToast('Upload complete');
-
-                // Fetching download url
-                final downloadUrl = await ref!.getDownloadURL();
-                debugPrint('Download url: $downloadUrl');
-
-                try {
-                  final db = FirebaseFirestore.instance;
-                  final user = FirebaseAuth.instance.currentUser;
-                  await db.collection('users').doc(user!.uid).update({
-                    'resume': downloadUrl,
-                  });
-                } catch (e) {
-                  debugPrint('Something went wrong while saving resume link');
-                  debugPrint(e.toString());
-                }
-                break;
-              case TaskState.canceled:
-                debugPrint('Canceled');
-                uploadState = UploadState.canceled;
-                break;
-              case TaskState.error:
-                debugPrint('Error');
-                uploadState = UploadState.error;
-                break;
+            try {
+              final db = FirebaseFirestore.instance;
+              final user = FirebaseAuth.instance.currentUser;
+              await db.collection('users').doc(user!.uid).update({
+                'resume': downloadUrl,
+              });
+            } catch (e) {
+              debugPrint('Something went wrong while saving resume link');
+              debugPrint(e.toString());
             }
-            setState(() {});
-          },
-          onError: (error) {
-            showToast('Something went wrong in listener');
-            debugPrint(error.toString());
-          },
-        );
-      } on FirebaseException catch (e) {
-        debugPrint('FirebaseException');
-        debugPrint(e.toString());
-      } catch (e) {
-        debugPrint('Something went wrong');
-        debugPrint(e.toString());
-      }
-    } else {
-      showToast('User cancelled picking file');
-    }
+            break;
+          case TaskState.canceled:
+            uploadState = UploadState.canceled;
+            break;
+          case TaskState.error:
+            uploadState = UploadState.error;
+            break;
+        }
+        setState(() {});
+      },
+    );
   }
 
   void navigateToHomePage() {

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:html';
 import 'dart:math';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -73,7 +74,7 @@ class _TestPageState extends State<TestPage> {
                         Text('${index + 1}. ${question.text}'),
                         const SizedBox(height: 8),
                         RadioListTile<String>(
-                          title: Text(answer.optionA),
+                          title: _buildOption(answer.isUrlA, answer.optionA),
                           groupValue: selectedOptions[index],
                           value: 'a',
                           onChanged: (String? value) {
@@ -83,7 +84,7 @@ class _TestPageState extends State<TestPage> {
                           },
                         ),
                         RadioListTile<String>(
-                          title: Text(answer.optionB),
+                          title: _buildOption(answer.isUrlB, answer.optionB),
                           groupValue: selectedOptions[index],
                           value: 'b',
                           onChanged: (String? value) {
@@ -93,7 +94,7 @@ class _TestPageState extends State<TestPage> {
                           },
                         ),
                         RadioListTile<String>(
-                          title: Text(answer.optionC),
+                          title: _buildOption(answer.isUrlC, answer.optionC),
                           groupValue: selectedOptions[index],
                           value: 'c',
                           onChanged: (String? value) {
@@ -103,7 +104,7 @@ class _TestPageState extends State<TestPage> {
                           },
                         ),
                         RadioListTile<String>(
-                          title: Text(answer.optionD),
+                          title: _buildOption(answer.isUrlD, answer.optionD),
                           groupValue: selectedOptions[index],
                           value: 'd',
                           onChanged: (String? value) {
@@ -155,6 +156,7 @@ class _TestPageState extends State<TestPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const CircularProgressIndicator(),
+                  const SizedBox(height: 8),
                   Text(loadingMessage),
                 ],
               ),
@@ -368,5 +370,22 @@ class _TestPageState extends State<TestPage> {
         ),
       ),
     );
+  }
+
+  Widget _buildOption(bool isImage, String value) {
+    if (isImage) {
+      return SizedBox(
+        height: 250,
+        child: CachedNetworkImage(
+          imageUrl: value,
+          placeholder: (context, url) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          },
+        ),
+      );
+    }
+    return Text(value);
   }
 }
