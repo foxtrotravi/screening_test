@@ -6,8 +6,8 @@ class TestSubmission {
   final String uid;
   final String userId;
   final Score score;
-  final List<String> questionIds;
-  final List<String> answers;
+  final List<dynamic> questionIds;
+  final List<dynamic> answers;
   final int createdAt;
 
   const TestSubmission({
@@ -35,7 +35,7 @@ class TestSubmission {
       score: Score.fromJson(json['score']),
       questionIds: json['questionIds'],
       answers: json['answers'],
-      createdAt: int.parse(json['createdAt']),
+      createdAt: json['createdAt'],
     );
   }
 

@@ -48,6 +48,15 @@ String getTimeStamp() {
   return '$yyyy-$mm-$dd';
 }
 
+String showTimestamp(int millisecondsSinceEpoch) {
+  final d = DateTime.fromMillisecondsSinceEpoch(millisecondsSinceEpoch);
+  final day = twoDigit(d.day);
+  final month = twoDigit(d.month);
+  final year = d.year;
+  final t = '${twoDigit(d.hour)}:${twoDigit(d.minute)}:${twoDigit(d.second)}';
+  return '$day/$month/$year $t';
+}
+
 Future<void> uploadToFirebaseUtil(
   PlatformFile file,
   String referencePath,
