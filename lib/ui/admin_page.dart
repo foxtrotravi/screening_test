@@ -3,7 +3,7 @@ import 'package:feather_icons/feather_icons.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:screening_test/models/question.dart';
-import 'package:screening_test/ui/admin/edit_question.dart';
+import 'package:screening_test/ui/admin/question_bank_page.dart';
 import 'package:screening_test/ui/home_page.dart';
 import 'package:screening_test/utils/utils.dart';
 
@@ -45,81 +45,16 @@ class _AdminPageState extends State<AdminPage> {
           _drawer(),
           Expanded(
             child: !_isLoading
-                ? Container(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                'Questions',
-                                style: Theme.of(context).textTheme.headline5,
-                              ),
-                            ),
-                            ElevatedButton(
-                              onPressed: () {
-                                openQuestion(isEdit: true);
-                              },
-                              child: const Text('Add new'),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        Expanded(
-                          child: Card(
-                            child: ListView.builder(
-                              itemCount: _questions.length,
-                              itemBuilder: (context, index) {
-                                final q = _questions[index];
-                                return InkWell(
-                                  onTap: () {
-                                    openQuestion(index: index);
-                                  },
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                            vertical: 16,
-                                          ),
-                                          child: Text(
-                                            '${index + 1}. ${q.text}',
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Text('Level ${q.level}'),
-                                      const SizedBox(width: 16),
-                                      IconButton(
-                                        onPressed: () {
-                                          debugPrint('Edit');
-                                          openQuestion(
-                                            index: index,
-                                            isEdit: true,
-                                          );
-                                        },
-                                        icon: const Icon(FeatherIcons.edit),
-                                      ),
-                                      IconButton(
-                                        onPressed: () {
-                                          debugPrint('Delete');
-                                        },
-                                        icon: const Icon(FeatherIcons.trash),
-                                      ),
-                                      const SizedBox(width: 16),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
+                ? QuestionBank(_questions, (question, index) {
+                    if (index == null) {
+                      // create
+                      _questions.add(question);
+                    } else {
+                      // update
+                      _questions[index] = question;
+                    }
+                    setState(() {});
+                  })
                 : loader(),
           ),
         ],
@@ -194,31 +129,6 @@ class _AdminPageState extends State<AdminPage> {
           ),
         ],
       ),
-    );
-  }
-
-  void openQuestion({int? index, bool isEdit = false}) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return AlertDialog(
-          scrollable: true,
-          content: EditQuestionPage(
-              isEdit: isEdit,
-              question: index == null ? null : _questions[index],
-              onSubmitCallback: (Question question) {
-                if (index == null) {
-                  // create
-                  _questions.add(question);
-                } else {
-                  // update
-                  _questions[index] = question;
-                }
-                setState(() {});
-              }),
-        );
-      },
     );
   }
 
