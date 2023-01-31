@@ -53,9 +53,9 @@ class _AdminPageState extends State<AdminPage> {
           )
         ],
       ),
+      drawer: _drawer(),
       body: Row(
         children: [
-          _drawer(),
           Expanded(
             child: !_isLoading ? _buildPage() : loader(),
           ),
@@ -82,6 +82,7 @@ class _AdminPageState extends State<AdminPage> {
           testSubmissions: testSubmissions,
           testSubmissionMap: testSubmissionMap,
           questionsMap: questionsMap,
+          users: users,
           usersMap: usersMap,
         );
     }
@@ -161,7 +162,10 @@ class _AdminPageState extends State<AdminPage> {
       title: Text(title),
       selected: currentPage == index,
       selectedTileColor: Colors.grey[200],
-      onTap: () => setState(() => currentPage = index),
+      onTap: () {
+        setState(() => currentPage = index);
+        Navigator.of(context).pop();
+      },
     );
   }
 
