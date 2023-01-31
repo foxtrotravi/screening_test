@@ -26,4 +26,8 @@ class Score {
   String toString() {
     return const JsonEncoder.withIndent(' ').convert(this);
   }
+
+  int totalScore() {
+    return level1 + level2 + level3 + level4;
+  }
 }
