@@ -31,6 +31,16 @@ class _AdminPageState extends State<AdminPage> {
   final users = <CollectionUser>[];
   final usersMap = <String, CollectionUser>{};
 
+  // Pagination Parameters
+  bool isLoadingMoreReports = false; // track if fetching more reports
+  bool isLoadingMoreUsers = false; // track if fetching more users
+  bool hasMoreReports = true; // flag for more reports available or not
+  bool hasMoreUsers = true; // flag for more users available or not
+  int reportsDocumentLimit = 20; // documents to be fetched per request
+  int usersDocumentLimit = 20; // documents to be fetched per request
+  DocumentSnapshot? reportLastDocument;
+  DocumentSnapshot? userLastDocument;
+
   @override
   void initState() {
     loadCollectionUsers();
@@ -67,16 +77,22 @@ class _AdminPageState extends State<AdminPage> {
   Widget _buildPage() {
     switch (currentPage) {
       case 0:
-        return QuestionBank(_questions, (question, index) {
-          if (index == null) {
-            // create
-            _questions.add(question);
-          } else {
-            // update
-            _questions[index] = question;
-          }
-          setState(() {});
-        });
+        return QuestionBank(
+          questions: _questions,
+          questionCallback: (question, index) {
+            if (index == null) {
+              // create
+              _questions.add(question);
+            } else {
+              // update
+              _questions[index] = question;
+            }
+            setState(() {});
+          },
+          loadMoreCallback: () {
+            loadQuestions();
+          },
+        );
       case 1:
         return ReportsPage(
           testSubmissions: testSubmissions,
@@ -84,6 +100,9 @@ class _AdminPageState extends State<AdminPage> {
           questionsMap: questionsMap,
           users: users,
           usersMap: usersMap,
+          callback: () {
+            loadTestSubmissions();
+          },
         );
     }
     return const SizedBox();
@@ -181,36 +200,104 @@ class _AdminPageState extends State<AdminPage> {
       questionsMap[question.uid!] = question;
     }
     if (mounted) {
-      setState(() {});
+      setState(() {
+        isLoadingMoreUsers = false;
+      });
     }
   }
 
   Future<void> loadTestSubmissions() async {
-    final querySnapshot =
-        await FirebaseFirestore.instance.collection('testSubmission').get();
+    debugPrint('Loading more\n\n\n\n');
+    if (!hasMoreReports) {
+      debugPrint('No More Submissions');
+      return;
+    }
+    if (isLoadingMoreReports) {
+      return;
+    }
+    setState(() {
+      isLoadingMoreReports = true;
+    });
+
+    late QuerySnapshot querySnapshot;
+
+    if (reportLastDocument == null) {
+      querySnapshot = await FirebaseFirestore.instance
+          .collection('testSubmission')
+          .limit(reportsDocumentLimit)
+          .get();
+    } else {
+      querySnapshot = await FirebaseFirestore.instance
+          .collection('testSubmission')
+          .startAfterDocument(reportLastDocument!)
+          .limit(reportsDocumentLimit)
+          .get();
+    }
     final docs = querySnapshot.docs;
 
     for (final doc in docs) {
-      final testSubmission = TestSubmission.fromJson(doc.data());
-      testSubmissions.add(testSubmission);
-      testSubmissionMap[testSubmission.uid] = testSubmission;
+      if (doc.data() != null) {
+        final testSubmission =
+            TestSubmission.fromJson(doc.data()! as Map<String, dynamic>);
+        testSubmissions.add(testSubmission);
+        testSubmissionMap[testSubmission.uid] = testSubmission;
+      }
     }
 
+    if (docs.length < reportsDocumentLimit) {
+      hasMoreReports = false;
+    }
+    reportLastDocument = querySnapshot.docs[querySnapshot.docs.length - 1];
+
     if (mounted) {
-      setState(() {});
+      setState(() {
+        isLoadingMoreReports = false;
+      });
     }
   }
 
   Future<void> loadCollectionUsers() async {
-    final querySnapshot =
-        await FirebaseFirestore.instance.collection('users').get();
+    if (!hasMoreUsers) {
+      debugPrint('No More Products');
+      return;
+    }
+    if (isLoadingMoreUsers) {
+      return;
+    }
+    setState(() {
+      isLoadingMoreUsers = true;
+    });
+
+    late QuerySnapshot querySnapshot;
+
+    if (userLastDocument == null) {
+      querySnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .limit(usersDocumentLimit)
+          .get();
+    } else {
+      querySnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .startAfterDocument(userLastDocument!)
+          .limit(usersDocumentLimit)
+          .get();
+    }
+
     final docs = querySnapshot.docs;
 
     for (final doc in docs) {
-      final collectionUser = CollectionUser.fromJson(doc.data());
-      users.add(collectionUser);
-      usersMap[collectionUser.uid] = collectionUser;
+      if (doc.data() != null) {
+        final collectionUser =
+            CollectionUser.fromJson(doc.data()! as Map<String, dynamic>);
+        users.add(collectionUser);
+        usersMap[collectionUser.uid] = collectionUser;
+      }
     }
+
+    if (docs.length < usersDocumentLimit) {
+      hasMoreUsers = false;
+    }
+    userLastDocument = querySnapshot.docs[querySnapshot.docs.length - 1];
 
     if (mounted) {
       setState(() {});

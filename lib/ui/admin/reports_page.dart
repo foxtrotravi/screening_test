@@ -16,6 +16,7 @@ class ReportsPage extends StatefulWidget {
     required this.questionsMap,
     required this.users,
     required this.usersMap,
+    required this.callback,
   });
 
   final List<TestSubmission> testSubmissions;
@@ -23,6 +24,7 @@ class ReportsPage extends StatefulWidget {
   final Map<String, Question> questionsMap;
   final List<CollectionUser> users;
   final Map<String, CollectionUser> usersMap;
+  final void Function() callback;
 
   @override
   State<ReportsPage> createState() => _ReportsPageState();
@@ -41,8 +43,16 @@ class _ReportsPageState extends State<ReportsPage> {
       expFilter = <String>{},
       statusFilter = <String>{};
 
+  final _scrollController = ScrollController();
+
   @override
   void initState() {
+    initScrollListener();
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     vmList = TestSubmissionVM.list(
       testSubmissions: widget.testSubmissions,
       testSubmissionMap: widget.testSubmissionMap,
@@ -50,11 +60,7 @@ class _ReportsPageState extends State<ReportsPage> {
       usersMap: widget.usersMap,
     );
     initFilters();
-    super.initState();
-  }
 
-  @override
-  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -64,7 +70,7 @@ class _ReportsPageState extends State<ReportsPage> {
             children: [
               Text(
                 'Reports',
-                style: Theme.of(context).textTheme.headline5,
+                style: Theme.of(context).textTheme.headlineSmall,
               ),
               const Spacer(),
               OutlinedButton(
@@ -120,6 +126,7 @@ class _ReportsPageState extends State<ReportsPage> {
           Expanded(
             child: Card(
               child: ListView.builder(
+                controller: _scrollController,
                 itemCount: vmList.length,
                 itemBuilder: ((context, index) {
                   final vm = vmList[index];
@@ -151,7 +158,7 @@ class _ReportsPageState extends State<ReportsPage> {
                         Visibility(
                           visible: user?.resume != null,
                           child: Link(
-                            uri: Uri.parse(user!.resume!),
+                            uri: Uri.parse('${user?.resume}'),
                             target: LinkTarget.blank,
                             builder: (BuildContext ctx, FollowLink? openLink) {
                               return TextButton(
@@ -165,7 +172,7 @@ class _ReportsPageState extends State<ReportsPage> {
                       ],
                     ),
                     subtitle: Text(
-                      'College: ${user.college}, Degree: ${user.highestDegree}, Exp: ${user.yearsOfExperience}, Status: ${user.workingStatus}',
+                      'College: ${user?.college}, Degree: ${user?.highestDegree}, Exp: ${user?.yearsOfExperience}, Status: ${user?.workingStatus}',
                       style: const TextStyle(
                         fontStyle: FontStyle.italic,
                         fontSize: 12,
@@ -274,5 +281,16 @@ class _ReportsPageState extends State<ReportsPage> {
       statusFilter: statusFilter,
     );
     setState(() {});
+  }
+
+  void initScrollListener() {
+    _scrollController.addListener(() {
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      final currentScroll = _scrollController.position.pixels;
+      final delta = MediaQuery.of(context).size.height * 0.20;
+      if (maxScroll - currentScroll <= delta) {
+        widget.callback();
+      }
+    });
   }
 }

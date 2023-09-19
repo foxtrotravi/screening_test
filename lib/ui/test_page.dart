@@ -71,47 +71,60 @@ class _TestPageState extends State<TestPage> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('${index + 1}. ${question.text}'),
-                        const SizedBox(height: 8),
-                        RadioListTile<String>(
-                          title: _buildOption(answer.isUrlA, answer.optionA),
-                          groupValue: selectedOptions[index],
-                          value: 'a',
-                          onChanged: (String? value) {
-                            setState(() {
-                              selectedOptions[index] = value ?? 'a';
-                            });
-                          },
-                        ),
-                        RadioListTile<String>(
-                          title: _buildOption(answer.isUrlB, answer.optionB),
-                          groupValue: selectedOptions[index],
-                          value: 'b',
-                          onChanged: (String? value) {
-                            setState(() {
-                              selectedOptions[index] = value ?? 'b';
-                            });
-                          },
-                        ),
-                        RadioListTile<String>(
-                          title: _buildOption(answer.isUrlC, answer.optionC),
-                          groupValue: selectedOptions[index],
-                          value: 'c',
-                          onChanged: (String? value) {
-                            setState(() {
-                              selectedOptions[index] = value ?? 'c';
-                            });
-                          },
-                        ),
-                        RadioListTile<String>(
-                          title: _buildOption(answer.isUrlD, answer.optionD),
-                          groupValue: selectedOptions[index],
-                          value: 'd',
-                          onChanged: (String? value) {
-                            setState(() {
-                              selectedOptions[index] = value ?? 'd';
-                            });
-                          },
+                        Expanded(
+                          child: SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('${index + 1}. ${question.text}'),
+                                const SizedBox(height: 8),
+                                RadioListTile<String>(
+                                  title: _buildOption(
+                                      answer.isUrlA, answer.optionA),
+                                  groupValue: selectedOptions[index],
+                                  value: 'a',
+                                  onChanged: (String? value) {
+                                    setState(() {
+                                      selectedOptions[index] = value ?? 'a';
+                                    });
+                                  },
+                                ),
+                                RadioListTile<String>(
+                                  title: _buildOption(
+                                      answer.isUrlB, answer.optionB),
+                                  groupValue: selectedOptions[index],
+                                  value: 'b',
+                                  onChanged: (String? value) {
+                                    setState(() {
+                                      selectedOptions[index] = value ?? 'b';
+                                    });
+                                  },
+                                ),
+                                RadioListTile<String>(
+                                  title: _buildOption(
+                                      answer.isUrlC, answer.optionC),
+                                  groupValue: selectedOptions[index],
+                                  value: 'c',
+                                  onChanged: (String? value) {
+                                    setState(() {
+                                      selectedOptions[index] = value ?? 'c';
+                                    });
+                                  },
+                                ),
+                                RadioListTile<String>(
+                                  title: _buildOption(
+                                      answer.isUrlD, answer.optionD),
+                                  groupValue: selectedOptions[index],
+                                  value: 'd',
+                                  onChanged: (String? value) {
+                                    setState(() {
+                                      selectedOptions[index] = value ?? 'd';
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 20),
                         Row(
@@ -196,16 +209,16 @@ class _TestPageState extends State<TestPage> {
     final querySnapshot =
         await FirebaseFirestore.instance.collection('questions').get();
     final allQuestions = <Question>[];
-    querySnapshot.docs.forEach((doc) {
+    for (var doc in querySnapshot.docs) {
       allQuestions.add(Question.fromJson(doc.data()));
-    });
+    }
 
     final lvlOne = <Question>[];
     final lvlTwo = <Question>[];
     final lvlThree = <Question>[];
     final lvlFour = <Question>[];
 
-    allQuestions.forEach((q) {
+    for (var q in allQuestions) {
       switch (q.level) {
         case 1:
           lvlOne.add(q);
@@ -220,7 +233,7 @@ class _TestPageState extends State<TestPage> {
           lvlFour.add(q);
           break;
       }
-    });
+    }
 
     // 2 questions from each level
     addTwoQuestions(lvlOne);
@@ -243,14 +256,18 @@ class _TestPageState extends State<TestPage> {
       }
     }
 
-    indexes.forEach((index) => questions.add(list[index]));
+    for (var index in indexes) {
+      questions.add(list[index]);
+    }
   }
 
   Future<void> startTimer() async {
-    setState(() {
-      _startTimer = true;
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _startTimer = true;
+        _isLoading = false;
+      });
+    }
 
     Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_time > 0) {

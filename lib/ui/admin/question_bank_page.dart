@@ -3,11 +3,30 @@ import 'package:flutter/material.dart';
 import 'package:screening_test/models/question.dart';
 import 'package:screening_test/ui/admin/edit_question.dart';
 
-class QuestionBank extends StatelessWidget {
-  const QuestionBank(this.questions, this.questionCallback, {super.key});
+class QuestionBank extends StatefulWidget {
+  const QuestionBank({
+    required this.questions,
+    required this.questionCallback,
+    required this.loadMoreCallback,
+    super.key,
+  });
 
   final List<Question> questions;
   final void Function(Question, int?) questionCallback;
+  final void Function() loadMoreCallback;
+
+  @override
+  State<QuestionBank> createState() => _QuestionBankState();
+}
+
+class _QuestionBankState extends State<QuestionBank> {
+  final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    initScrollListener();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,9 +37,18 @@ class QuestionBank extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Text(
-                  'Questions',
-                  style: Theme.of(context).textTheme.headline5,
+                child: Row(
+                  children: [
+                    Text(
+                      'Questions',
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child:
+                          Text('(Level 1 for easy & Level 4 for difficulty)'),
+                    ),
+                  ],
                 ),
               ),
               ElevatedButton(
@@ -35,9 +63,9 @@ class QuestionBank extends StatelessWidget {
           Expanded(
             child: Card(
               child: ListView.builder(
-                itemCount: questions.length,
+                itemCount: widget.questions.length,
                 itemBuilder: (context, index) {
-                  final q = questions[index];
+                  final q = widget.questions[index];
                   return InkWell(
                     onTap: () {
                       openQuestion(context, index: index);
@@ -92,11 +120,22 @@ class QuestionBank extends StatelessWidget {
           scrollable: true,
           content: EditQuestionPage(
             isEdit: isEdit,
-            question: index == null ? null : questions[index],
-            onSubmitCallback: (_) => questionCallback(_, index),
+            question: index == null ? null : widget.questions[index],
+            onSubmitCallback: (_) => widget.questionCallback(_, index),
           ),
         );
       },
     );
+  }
+
+  void initScrollListener() {
+    _scrollController.addListener(() {
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      final currentScroll = _scrollController.position.pixels;
+      final delta = MediaQuery.of(context).size.height * 0.20;
+      if (maxScroll - currentScroll <= delta) {
+        widget.loadMoreCallback();
+      }
+    });
   }
 }
