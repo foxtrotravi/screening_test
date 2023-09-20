@@ -462,8 +462,16 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _handleCandidateLogin() async {
     try {
-      final credential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      bool hasAccess = await checkUserAccess();
+
+      if (!hasAccess) {
+        showToast('You don\'t have access to give test');
+        setState(() {
+          isLoading = false;
+        });
+        return;
+      }
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _emailController.text.trim(),
       );
@@ -550,5 +558,31 @@ class _HomePageState extends State<HomePage> {
       context,
       MaterialPageRoute(builder: (context) => const AdminPage()),
     );
+  }
+
+  Future<bool> checkUserAccess() async {
+    final db = FirebaseFirestore.instance;
+
+    final snapshot = await db
+        .collection('authorizedUsers')
+        .where(
+          'email',
+          isEqualTo: _emailController.text.trim(),
+        )
+        .get();
+
+    final docs = snapshot.docs;
+    if (docs.isEmpty) {
+      return false;
+    }
+
+    final doc = docs.first;
+    final data = doc.data();
+
+    if (data['allowAccess'] == true) {
+      return true;
+    } else {
+      return false;
+    }
   }
 }
