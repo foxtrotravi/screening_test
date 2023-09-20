@@ -3,6 +3,7 @@ import 'dart:convert';
 class Question {
   String? uid;
   final String text;
+  final String? imageUrl;
   final Answer answer;
   final String correctOption;
   final int level;
@@ -13,11 +14,13 @@ class Question {
     required this.answer,
     required this.correctOption,
     required this.level,
+    this.imageUrl,
   });
 
   factory Question.fromJson(dynamic json) {
     return Question(
       uid: json['uid'],
+      imageUrl: json['question']['imageUrl'],
       text: json['question']['text'],
       answer: Answer.fromJson(json['question']['answer']),
       correctOption: json['question']['correctOption'],
@@ -80,6 +83,7 @@ class Question {
   dynamic toJson() => {
         'uid': uid,
         'text': text,
+        'imageUrl': imageUrl,
         'answer': answer.toJson(),
         'correctOption': correctOption,
         'level': level,

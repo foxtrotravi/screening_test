@@ -24,6 +24,7 @@ class EditQuestionPage extends StatefulWidget {
 
 class _EditQuestionPageState extends State<EditQuestionPage> {
   final questionController = TextEditingController();
+  final questionImageController = TextEditingController();
   final optionAController = TextEditingController();
   final optionBController = TextEditingController();
   final optionCController = TextEditingController();
@@ -38,6 +39,7 @@ class _EditQuestionPageState extends State<EditQuestionPage> {
   void initState() {
     isCreate = widget.question == null;
     questionController.text = widget.question?.text ?? '';
+    questionImageController.text = widget.question?.imageUrl ?? '';
     optionAController.text = widget.question?.answer.optionA ?? '';
     optionBController.text = widget.question?.answer.optionB ?? '';
     optionCController.text = widget.question?.answer.optionC ?? '';
@@ -90,6 +92,27 @@ class _EditQuestionPageState extends State<EditQuestionPage> {
                   )
                 : Text(widget.question!.text),
           ),
+          widget.isEdit
+              ? TextFormField(
+                  decoration: InputDecoration(
+                    label: const Text('Question Image'),
+                    suffixIcon: OutlinedButton(
+                      onPressed: () async {
+                        await pickAndUploadToFirebase(questionImageController);
+                      },
+                      child: const Text('Upload image'),
+                    ),
+                  ),
+                  controller: questionImageController,
+                )
+              : widget.question?.imageUrl == null
+                  ? const SizedBox()
+                  : _buildListTile(
+                      '',
+                      widget.question!.imageUrl!,
+                      true,
+                    ),
+          const SizedBox(height: 40),
           widget.isEdit
               ? TextFormField(
                   decoration: InputDecoration(
@@ -294,6 +317,7 @@ class _EditQuestionPageState extends State<EditQuestionPage> {
 
     final question = Question(
       text: questionController.text,
+      imageUrl: questionImageController.text,
       answer: answer,
       correctOption: selectedValue,
       level: level,

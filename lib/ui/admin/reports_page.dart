@@ -48,6 +48,8 @@ class _ReportsPageState extends State<ReportsPage> {
   @override
   void initState() {
     initScrollListener();
+    initFilters();
+
     super.initState();
   }
 
@@ -58,8 +60,11 @@ class _ReportsPageState extends State<ReportsPage> {
       testSubmissionMap: widget.testSubmissionMap,
       questionsMap: widget.questionsMap,
       usersMap: widget.usersMap,
+      collegeFilter: collegeFilter,
+      degreeFilter: degreeFilter,
+      expFilter: expFilter,
+      statusFilter: statusFilter,
     );
-    initFilters();
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -280,6 +285,7 @@ class _ReportsPageState extends State<ReportsPage> {
       expFilter: expFilter,
       statusFilter: statusFilter,
     );
+    debugPrint('Filter applied');
     setState(() {});
   }
 
