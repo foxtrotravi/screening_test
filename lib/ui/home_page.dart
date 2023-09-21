@@ -465,7 +465,24 @@ class _HomePageState extends State<HomePage> {
       bool hasAccess = await checkUserAccess();
 
       if (!hasAccess) {
+        if (!mounted) return;
         showToast('You don\'t have access to give test');
+        showDialog<String>(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text('Unauthorized'),
+              content: const Text('You don\'t have access to give test'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, 'Ok'),
+                  child: const Text('Ok'),
+                ),
+              ],
+            );
+          },
+        );
+
         setState(() {
           isLoading = false;
         });
@@ -476,6 +493,7 @@ class _HomePageState extends State<HomePage> {
         password: _emailController.text.trim(),
       );
 
+      if (!mounted) return;
       setState(() {
         isLoading = false;
       });

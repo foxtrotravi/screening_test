@@ -352,6 +352,8 @@ class _TestPageState extends State<TestPage> {
       );
 
       await doc.set(testSubmission.toJson());
+
+      await updateUserAccess();
     } catch (e) {
       debugPrint(e.toString());
       showToast('Something went wrong');
@@ -404,5 +406,33 @@ class _TestPageState extends State<TestPage> {
       );
     }
     return Text(value);
+  }
+
+  Future<void> updateUserAccess() async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) return;
+    if (user.email == null) return;
+
+    final authorizedUsers =
+        FirebaseFirestore.instance.collection('authorizedUsers');
+
+    final snapshot =
+        await authorizedUsers.where('email', isEqualTo: user.email).get();
+
+    if (snapshot.docs.isEmpty) return;
+
+    final doc = snapshot.docs.first;
+    final map = doc.data();
+    map['allowAccess'] = false;
+    map['uid'] = user.uid;
+
+    try {
+      await authorizedUsers.doc(doc.id).update(map);
+    } catch (e) {
+      debugPrint('Something went wrong');
+      debugPrint(e.toString());
+      showToast('Something went wrong when updating user access');
+    }
   }
 }
