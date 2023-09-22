@@ -1,3 +1,9 @@
+import 'dart:convert';
+import 'dart:html' as html;
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:csv/csv.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:screening_test/constants/enums.dart';
 import 'package:screening_test/models/collection_user.dart';
@@ -124,6 +130,21 @@ class _ReportsPageState extends State<ReportsPage> {
                   );
                 },
                 child: const Text('Working status'),
+              ),
+              const SizedBox(width: 20),
+              OutlinedButton(
+                onPressed: () {
+                  try {
+                    if (kIsWeb) {
+                      downloadReport();
+                    } else {
+                      showToast('This feature is only available for web');
+                    }
+                  } catch (e) {
+                    showToast(e.toString());
+                  }
+                },
+                child: const Text('Download Report'),
               ),
             ],
           ),
@@ -298,5 +319,85 @@ class _ReportsPageState extends State<ReportsPage> {
         widget.callback();
       }
     });
+  }
+
+  Future<void> downloadReport() async {
+    final db = FirebaseFirestore.instance;
+    final testSubmission = await db.collection('testSubmission').get();
+    final users = await db.collection('users').get();
+
+    final usersMap = <String, CollectionUser>{};
+
+    for (final doc in users.docs) {
+      final data = doc.data();
+      usersMap[data['uid']] = CollectionUser.fromJson(data);
+    }
+
+    final header = [
+      'Name',
+      'Email',
+      'Phone number',
+      'College',
+      'Degree',
+      'Working Status',
+      'Experience',
+      'Resume link',
+      'Score',
+      'Test id'
+    ];
+
+    final list = <List>[];
+    list.add(header);
+
+    final docs = testSubmission.docs;
+    for (int i = 0; i < docs.length; i++) {
+      final doc = docs[i];
+      final data = doc.data();
+
+      final user = usersMap[data['userId']];
+      final name = user?.name;
+      final email = user?.email;
+      final phoneNumber = user?.phoneNumber;
+      final college = user?.college;
+      final degree = user?.highestDegree;
+      final workingStatus = user?.workingStatus;
+      final experience = user?.yearsOfExperience;
+      final resume = user?.resume;
+
+      final scoreMap = data['score'];
+      final score = scoreMap['level1'] +
+          scoreMap['level2'] +
+          scoreMap['level3'] +
+          scoreMap['level4'];
+
+      final temp = [
+        name,
+        email,
+        phoneNumber,
+        college,
+        degree,
+        workingStatus,
+        experience,
+        resume,
+        score,
+        data['uid'],
+      ];
+      list.add(temp);
+    }
+
+    String csv = const ListToCsvConverter().convert(list);
+    debugPrint(csv);
+
+    final bytes = utf8.encode(csv);
+    final blob = html.Blob([bytes]);
+
+    final url = html.Url.createObjectUrlFromBlob(blob);
+    final anchor = html.document.createElement('a') as html.AnchorElement
+      ..href = url
+      ..style.display = 'none'
+      ..download = 'reports.csv';
+    html.document.body?.children.add(anchor);
+    anchor.click();
+    html.Url.revokeObjectUrl(url);
   }
 }
