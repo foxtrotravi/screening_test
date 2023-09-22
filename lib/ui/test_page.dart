@@ -417,18 +417,21 @@ class _TestPageState extends State<TestPage> {
     final authorizedUsers =
         FirebaseFirestore.instance.collection('authorizedUsers');
 
-    final snapshot =
-        await authorizedUsers.where('email', isEqualTo: user.email).get();
+    final snapshot = await authorizedUsers.doc(user.email).get();
 
-    if (snapshot.docs.isEmpty) return;
+    if (!snapshot.exists) {
+      return;
+    }
 
-    final doc = snapshot.docs.first;
-    final map = doc.data();
+    final map = snapshot.data();
+
+    if (map == null) return;
+
     map['allowAccess'] = false;
     map['uid'] = user.uid;
 
     try {
-      await authorizedUsers.doc(doc.id).update(map);
+      await authorizedUsers.doc(user.email).update(map);
     } catch (e) {
       debugPrint('Something went wrong');
       debugPrint(e.toString());

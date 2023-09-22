@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:screening_test/models/collection_user.dart';
 import 'package:screening_test/models/question.dart';
 import 'package:screening_test/models/test_submission.dart';
+import 'package:screening_test/ui/admin/access_page.dart';
 import 'package:screening_test/ui/admin/question_bank_page.dart';
 import 'package:screening_test/ui/admin/reports_page.dart';
 import 'package:screening_test/ui/home_page.dart';
@@ -104,6 +105,8 @@ class _AdminPageState extends State<AdminPage> {
             loadTestSubmissions();
           },
         );
+      case 2:
+        return const AccessPage();
     }
     return const SizedBox();
   }
@@ -171,6 +174,7 @@ class _AdminPageState extends State<AdminPage> {
         children: [
           _buildListTile('Questions', 0),
           _buildListTile('Reports', 1),
+          _buildListTile('Access', 2),
         ],
       ),
     );
