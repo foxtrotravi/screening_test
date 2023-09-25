@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:html';
-import 'dart:math';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -77,6 +76,13 @@ class _TestPageState extends State<TestPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text('${index + 1}. ${question.text}'),
+                                question.imageUrl != null
+                                    ? Center(
+                                        child: CachedNetworkImage(
+                                          imageUrl: question.imageUrl!,
+                                        ),
+                                      )
+                                    : const SizedBox(),
                                 const SizedBox(height: 8),
                                 RadioListTile<String>(
                                   title: _buildOption(
@@ -138,7 +144,7 @@ class _TestPageState extends State<TestPage> {
                                     curve: Curves.easeIn,
                                   );
                                 },
-                                child: Text('Prev'),
+                                child: const Text('Prev'),
                               ),
                             ),
                             const SizedBox(width: 20),
@@ -213,52 +219,9 @@ class _TestPageState extends State<TestPage> {
       allQuestions.add(Question.fromJson(doc.data()));
     }
 
-    final lvlOne = <Question>[];
-    final lvlTwo = <Question>[];
-    final lvlThree = <Question>[];
-    final lvlFour = <Question>[];
-
-    for (var q in allQuestions) {
-      switch (q.level) {
-        case 1:
-          lvlOne.add(q);
-          break;
-        case 2:
-          lvlTwo.add(q);
-          break;
-        case 3:
-          lvlThree.add(q);
-          break;
-        case 4:
-          lvlFour.add(q);
-          break;
-      }
-    }
-
-    // 2 questions from each level
-    addTwoQuestions(lvlOne);
-    addTwoQuestions(lvlTwo);
-    addTwoQuestions(lvlThree);
-    addTwoQuestions(lvlFour);
-
+    questions = allQuestions;
     selectedOptions = List<String>.filled(questions.length, '');
     startTimer();
-  }
-
-  void addTwoQuestions(List<Question> list) {
-    final random = Random();
-    final indexes = <int>{};
-
-    while (true) {
-      indexes.add(random.nextInt(list.length));
-      if (indexes.length >= 2 || indexes.length >= list.length) {
-        break;
-      }
-    }
-
-    for (var index in indexes) {
-      questions.add(list[index]);
-    }
   }
 
   Future<void> startTimer() async {

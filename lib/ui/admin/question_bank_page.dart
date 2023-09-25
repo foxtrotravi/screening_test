@@ -46,7 +46,7 @@ class _QuestionBankState extends State<QuestionBank> {
                     const SizedBox(width: 8),
                     const Expanded(
                       child:
-                          Text('(Level 1 for easy & Level 4 for difficulty)'),
+                          Text('(Level 1 for easy & Level 5 for difficulty)'),
                     ),
                   ],
                 ),

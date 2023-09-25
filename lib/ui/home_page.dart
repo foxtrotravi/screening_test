@@ -32,6 +32,27 @@ class _HomePageState extends State<HomePage> {
   final _passwordController = TextEditingController();
   final _passwordFocusNode = FocusNode();
 
+  final _appliedPositionController = TextEditingController();
+  final _appliedPositionFocusNode = FocusNode();
+
+  final _jobReferenceController = TextEditingController();
+  final _jobReferenceFocusNode = FocusNode();
+
+  final _currentLocationController = TextEditingController();
+  final _currentLocationFocusNode = FocusNode();
+
+  final _noticePeriodController = TextEditingController();
+  final _noticePeriodFocusNode = FocusNode();
+
+  final _currentAnnualCTCController = TextEditingController();
+  final _currentAnnualCTCFocusNode = FocusNode();
+
+  final _expectedAnnualCTCController = TextEditingController();
+  final _expectedAnnualCTCFocusNode = FocusNode();
+
+  final _reasonForJobChangeController = TextEditingController();
+  final _reasonForJobChangeFocusNode = FocusNode();
+
   final _formKey = GlobalKey<FormState>();
 
   var _highestDegree = 'Select your highest degree'.toLowerCase();
@@ -283,11 +304,18 @@ class _HomePageState extends State<HomePage> {
     if (phoneNumber == null || phoneNumber.isEmpty) {
       return "Phone number can't be empty";
     }
-    return (phoneNumber.length != 10) ? 'Invalid phone number' : null;
+    return (phoneNumber.length >= 10) ? 'Invalid phone number' : null;
   }
 
   String? _collegeValidator(String? college) {
     if (college == null || college.isEmpty) return "College can't be empty";
+    return null;
+  }
+
+  String? _notEmpty(String? val, String title) {
+    if (val == null || val.isEmpty) {
+      return "$title can't be empty";
+    }
     return null;
   }
 
@@ -452,6 +480,70 @@ class _HomePageState extends State<HomePage> {
             setState(() {});
           },
         ),
+        const SizedBox(height: 20),
+
+        CommonTextField(
+          controller: _appliedPositionController,
+          focusNode: _appliedPositionFocusNode,
+          hintText: 'Applied Position',
+          validator: (_) => _notEmpty(_, 'Applied Position'),
+          iconData: Icons.school_outlined,
+        ),
+        const SizedBox(height: 20),
+
+        CommonTextField(
+          controller: _jobReferenceController,
+          focusNode: _jobReferenceFocusNode,
+          hintText: 'Job Reference',
+          validator: (_) => _notEmpty(_, 'Job Reference'),
+          iconData: Icons.school_outlined,
+        ),
+        const SizedBox(height: 20),
+
+        CommonTextField(
+          controller: _currentLocationController,
+          focusNode: _currentLocationFocusNode,
+          hintText: 'Current Location',
+          validator: (_) => _notEmpty(_, 'Current Location'),
+          iconData: Icons.location_city_outlined,
+        ),
+        const SizedBox(height: 20),
+
+        CommonTextField(
+          controller: _currentLocationController,
+          focusNode: _currentLocationFocusNode,
+          hintText: 'Notice Period',
+          validator: (_) => _notEmpty(_, 'Notice Period'),
+          iconData: Icons.timer,
+        ),
+        const SizedBox(height: 20),
+
+        CommonTextField(
+          controller: _currentAnnualCTCController,
+          focusNode: _currentAnnualCTCFocusNode,
+          hintText: 'Current Annual CTC',
+          validator: (_) => _notEmpty(_, 'Current Annual CTC'),
+          iconData: Icons.money,
+        ),
+        const SizedBox(height: 20),
+
+        CommonTextField(
+          controller: _expectedAnnualCTCController,
+          focusNode: _expectedAnnualCTCFocusNode,
+          hintText: 'Expected Annual CTC',
+          validator: (_) => _notEmpty(_, 'Expected Annual CTC'),
+          iconData: Icons.money,
+        ),
+        const SizedBox(height: 20),
+
+        CommonTextField(
+          controller: _reasonForJobChangeController,
+          focusNode: _reasonForJobChangeFocusNode,
+          hintText: 'Reason For Job Change',
+          validator: (_) => _notEmpty(_, 'Reason For Job Change'),
+          iconData: Icons.document_scanner_outlined,
+        ),
+
         // Resume upload button
         const SizedBox(height: 40)
       ];
@@ -534,6 +626,13 @@ class _HomePageState extends State<HomePage> {
         user['highestDegree'] = _highestDegree.trim();
         user['workingStatus'] = _workingStatus.trim();
         user['yearsOfExperience'] = _yearsOfExperience.trim();
+        user['appliedPosition'] = _appliedPositionController.text.trim();
+        user['jobReference'] = _jobReferenceController.text.trim();
+        user['currentLocation'] = _currentLocationController.text.trim();
+        user['noticePeriod'] = _noticePeriodController.text.trim();
+        user['currentAnnualCTC'] = _currentAnnualCTCController.text.trim();
+        user['expectedAnnualCTC'] = _expectedAnnualCTCController.text.trim();
+        user['reasonForJobChange'] = _reasonForJobChangeController.text.trim();
       }
 
       final db = FirebaseFirestore.instance;

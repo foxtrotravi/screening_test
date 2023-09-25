@@ -11,6 +11,13 @@ class CollectionUser {
   final String? resume;
   final String? workingStatus;
   final String? yearsOfExperience;
+  final String? appliedPosition;
+  final String? jobReference;
+  final String? currentLocation;
+  final String? noticePeriod;
+  final String? currentAnnualCTC;
+  final String? expectedAnnualCTC;
+  final String? reasonForJobChange;
 
   const CollectionUser({
     required this.uid,
@@ -23,6 +30,13 @@ class CollectionUser {
     this.resume,
     this.workingStatus,
     this.yearsOfExperience,
+    this.appliedPosition,
+    this.jobReference,
+    this.currentLocation,
+    this.noticePeriod,
+    this.currentAnnualCTC,
+    this.expectedAnnualCTC,
+    this.reasonForJobChange,
   });
 
   dynamic toJson() => {
@@ -36,6 +50,13 @@ class CollectionUser {
         'resume': resume,
         'workingStatus': workingStatus,
         'yearsOfExperience': yearsOfExperience,
+        'appliedPosition': appliedPosition,
+        'jobReference': jobReference,
+        'currentLocation': currentLocation,
+        'noticePeriod': noticePeriod,
+        'currentAnnualCTC': currentAnnualCTC,
+        'expectedAnnualCTC': expectedAnnualCTC,
+        'reasonForJobChange': reasonForJobChange,
       };
 
   factory CollectionUser.fromJson(Map<String, dynamic> json) {
@@ -50,6 +71,13 @@ class CollectionUser {
       resume: json['resume'],
       workingStatus: json['workingStatus'],
       yearsOfExperience: json['yearsOfExperience'],
+      appliedPosition: json['appliedPosition'],
+      jobReference: json['jobReference'],
+      currentLocation: json['currentLocation'],
+      noticePeriod: json['noticePeriod'],
+      currentAnnualCTC: json['currentAnnualCTC'],
+      expectedAnnualCTC: json['expectedAnnualCTC'],
+      reasonForJobChange: json['reasonForJobChange'],
     );
   }
 

@@ -197,7 +197,7 @@ class _EditQuestionPageState extends State<EditQuestionPage> {
                     Expanded(
                       child: DropdownButton(
                         value: level,
-                        items: [1, 2, 3, 4].map((e) {
+                        items: [1, 2, 3, 4, 5].map((e) {
                           return DropdownMenuItem(
                             value: e,
                             child: Text('$e'),
