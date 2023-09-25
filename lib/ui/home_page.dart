@@ -304,7 +304,7 @@ class _HomePageState extends State<HomePage> {
     if (phoneNumber == null || phoneNumber.isEmpty) {
       return "Phone number can't be empty";
     }
-    return (phoneNumber.length >= 10) ? 'Invalid phone number' : null;
+    return (phoneNumber.length < 10) ? 'Invalid phone number' : null;
   }
 
   String? _collegeValidator(String? college) {
@@ -510,8 +510,8 @@ class _HomePageState extends State<HomePage> {
         const SizedBox(height: 20),
 
         CommonTextField(
-          controller: _currentLocationController,
-          focusNode: _currentLocationFocusNode,
+          controller: _noticePeriodController,
+          focusNode: _noticePeriodFocusNode,
           hintText: 'Notice Period',
           validator: (_) => _notEmpty(_, 'Notice Period'),
           iconData: Icons.timer,
