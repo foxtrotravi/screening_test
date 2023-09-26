@@ -590,7 +590,7 @@ class _HomePageState extends State<HomePage> {
         isLoading = false;
       });
 
-      _navigateToTest();
+      _login();
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
         showToast('The password provided is too weak.');

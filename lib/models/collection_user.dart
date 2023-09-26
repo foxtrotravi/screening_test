@@ -60,25 +60,29 @@ class CollectionUser {
       };
 
   factory CollectionUser.fromJson(Map<String, dynamic> json) {
-    return CollectionUser(
-      uid: json['uid'],
-      email: json['email'],
-      college: json['college'],
-      highestDegree: json['highestDegree'],
-      isAdmin: json['isAdmin'],
-      name: json['name'],
-      phoneNumber: json['phoneNumber'],
-      resume: json['resume'],
-      workingStatus: json['workingStatus'],
-      yearsOfExperience: json['yearsOfExperience'],
-      appliedPosition: json['appliedPosition'],
-      jobReference: json['jobReference'],
-      currentLocation: json['currentLocation'],
-      noticePeriod: json['noticePeriod'],
-      currentAnnualCTC: json['currentAnnualCTC'],
-      expectedAnnualCTC: json['expectedAnnualCTC'],
-      reasonForJobChange: json['reasonForJobChange'],
-    );
+    try {
+      return CollectionUser(
+        uid: json['uid'],
+        email: json['email'],
+        college: json['college'],
+        highestDegree: json['highestDegree'],
+        isAdmin: json['isAdmin'],
+        name: json['name'],
+        phoneNumber: json['phoneNumber'],
+        resume: json['resume'],
+        workingStatus: json['workingStatus'],
+        yearsOfExperience: json['yearsOfExperience'],
+        appliedPosition: json['appliedPosition'],
+        jobReference: json['jobReference'],
+        currentLocation: json['currentLocation'],
+        noticePeriod: json['noticePeriod'],
+        currentAnnualCTC: json['currentAnnualCTC'],
+        expectedAnnualCTC: json['expectedAnnualCTC'],
+        reasonForJobChange: json['reasonForJobChange'],
+      );
+    } catch (e) {
+      return const CollectionUser(uid: 'uid', email: 'email', isAdmin: false);
+    }
   }
 
   @override

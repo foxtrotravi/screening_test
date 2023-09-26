@@ -1,17 +1,23 @@
 import 'dart:convert';
 
 class Score {
-  final int level1, level2, level3, level4;
+  final int level1, level2, level3, level4, level5;
 
   const Score({
     required this.level1,
     required this.level2,
     required this.level3,
     required this.level4,
+    required this.level5,
   });
 
-  dynamic toJson() =>
-      {'level1': level1, 'level2': level2, 'level3': level3, 'level4': level4};
+  dynamic toJson() => {
+        'level1': level1,
+        'level2': level2,
+        'level3': level3,
+        'level4': level4,
+        'level5': level5
+      };
 
   factory Score.fromJson(Map<String, dynamic> json) {
     return Score(
@@ -19,6 +25,7 @@ class Score {
       level2: json['level2'],
       level3: json['level3'],
       level4: json['level4'],
+      level5: json['level5'],
     );
   }
 
@@ -28,6 +35,6 @@ class Score {
   }
 
   int totalScore() {
-    return level1 + level2 + level3 + level4;
+    return level1 + level2 + level3 + level4 + level5;
   }
 }
