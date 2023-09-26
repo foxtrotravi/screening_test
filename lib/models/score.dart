@@ -16,7 +16,7 @@ class Score {
         'level2': level2,
         'level3': level3,
         'level4': level4,
-        'level5': level5
+        'level5': level5,
       };
 
   factory Score.fromJson(Map<String, dynamic> json) {

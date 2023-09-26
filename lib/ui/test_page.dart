@@ -285,7 +285,7 @@ class _TestPageState extends State<TestPage> {
 
   Future<void> uploadToFirebase() async {
     final questionIds = <String>[];
-    final scoreArray = List.filled(4, 0);
+    final scoreArray = List.filled(5, 0);
 
     for (int i = 0; i < questions.length; i++) {
       final q = questions[i];
@@ -300,6 +300,7 @@ class _TestPageState extends State<TestPage> {
       level2: scoreArray[1],
       level3: scoreArray[2],
       level4: scoreArray[3],
+      level5: scoreArray[4],
     );
 
     try {
