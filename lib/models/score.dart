@@ -21,11 +21,11 @@ class Score {
 
   factory Score.fromJson(Map<String, dynamic> json) {
     return Score(
-      level1: json['level1'],
-      level2: json['level2'],
-      level3: json['level3'],
-      level4: json['level4'],
-      level5: json['level5'],
+      level1: json['level1'] ?? 0,
+      level2: json['level2'] ?? 0,
+      level3: json['level3'] ?? 0,
+      level4: json['level4'] ?? 0,
+      level5: json['level5'] ?? 0,
     );
   }
 

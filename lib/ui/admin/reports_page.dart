@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:screening_test/constants/enums.dart';
 import 'package:screening_test/models/collection_user.dart';
 import 'package:screening_test/models/question.dart';
+import 'package:screening_test/models/score.dart';
 import 'package:screening_test/models/test_submission.dart';
 import 'package:screening_test/utils/utils.dart';
 import 'package:screening_test/view_models/test_submission_vm.dart';
@@ -343,7 +344,14 @@ class _ReportsPageState extends State<ReportsPage> {
       'Experience',
       'Resume link',
       'Score',
-      'Test id'
+      'Test id',
+      'Applied Position',
+      'Job Reference',
+      'Current Location',
+      'Notice Period',
+      'Current Annual CTC',
+      'Expected Annual CTC',
+      'Reason For Job Change',
     ];
 
     final list = <List>[];
@@ -363,12 +371,17 @@ class _ReportsPageState extends State<ReportsPage> {
       final workingStatus = user?.workingStatus;
       final experience = user?.yearsOfExperience;
       final resume = user?.resume;
+      final appliedPosition = user?.appliedPosition;
+      final jobReference = user?.jobReference;
+      final currentLocation = user?.currentLocation;
+      final noticePeriod = user?.noticePeriod;
+      final currentAnnualCTC = user?.currentAnnualCTC;
+      final expectedAnnualCTC = user?.expectedAnnualCTC;
+      final reasonForJobChange = user?.reasonForJobChange;
 
       final scoreMap = data['score'];
-      final score = scoreMap['level1'] +
-          scoreMap['level2'] +
-          scoreMap['level3'] +
-          scoreMap['level4'];
+      final scoreModel = Score.fromJson(scoreMap);
+      final score = scoreModel.totalScore();
 
       final temp = [
         name,
@@ -381,6 +394,13 @@ class _ReportsPageState extends State<ReportsPage> {
         resume,
         score,
         data['uid'],
+        appliedPosition,
+        jobReference,
+        currentLocation,
+        noticePeriod,
+        currentAnnualCTC,
+        expectedAnnualCTC,
+        reasonForJobChange,
       ];
       list.add(temp);
     }
