@@ -129,7 +129,7 @@ class _HomePageState extends State<HomePage> {
                       .collection('users')
                       .doc(user.uid)
                       .get(),
-                  builder: ((context, _snapshot) {
+                  builder: ((context, snapshot) {
                     if (snapshot.hasError) {
                       return const Center(
                         child: Text('Something went wrong'),
@@ -142,7 +142,7 @@ class _HomePageState extends State<HomePage> {
                         return const CircularProgressIndicator();
                       case ConnectionState.active:
                       case ConnectionState.done:
-                        final collectionUser = _snapshot.data?.data();
+                        final collectionUser = snapshot.data?.data();
                         if (collectionUser != null) {
                           final isAdmin = collectionUser['isAdmin'];
                           if (isAdmin) {

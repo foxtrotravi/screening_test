@@ -38,8 +38,24 @@
   </script>
   <!-- This script adds the flutter initialization JS code -->
   <script src="flutter.js" defer></script>
+
+  <style>
+    html, body {
+      background-color: #1b2023;
+    }
+
+    .center {
+      margin: 0;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      margin-right: -50%;
+      transform: translate(-50%, -50%)
+    }
+  </style>
 </head>
 <body>
+  <img src="img/livio_logo.png" class="center" style="height: 100px;" />
   <script>
     window.addEventListener('load', function(ev) {
       // Download main.dart.js
