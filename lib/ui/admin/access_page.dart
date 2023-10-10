@@ -15,6 +15,10 @@ class _AccessPageState extends State<AccessPage> {
 
   final _textEditingController = TextEditingController();
 
+  final list = [];
+
+  static const doesntExist = 'Doesn\'t Exist';
+
   @override
   void initState() {
     super.initState();
@@ -68,7 +72,50 @@ class _AccessPageState extends State<AccessPage> {
                               onPressed: () => _grantAccess(false),
                               child: const Text('Revoke Access'),
                             ),
+                            const SizedBox(width: 20),
+                            ElevatedButton(
+                              onPressed: () => _checkAccess(),
+                              child: const Text('Check Access'),
+                            ),
                           ],
+                        ),
+                        const SizedBox(height: 20),
+                        ListView.builder(
+                          itemCount: list.length + 1,
+                          shrinkWrap: true,
+                          itemBuilder: (context, index) {
+                            final email =
+                                index == 0 ? 'Email' : list[index - 1]['email'];
+                            final access = index == 0
+                                ? 'Access'
+                                : list[index - 1]['allowAccess'];
+
+                            final exists = index == 0
+                                ? true
+                                : (list[index - 1]['allowAccess'] !=
+                                    doesntExist);
+                            return ListTile(
+                              title: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(index == 0
+                                      ? 'Email'
+                                      : list[index - 1]['email']),
+                                  Text(
+                                    index == 0
+                                        ? 'Access'
+                                        : '${list[index - 1]['allowAccess']}',
+                                    style: exists
+                                        ? null
+                                        : TextStyle(
+                                            color: Colors.red,
+                                          ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -106,6 +153,25 @@ class _AccessPageState extends State<AccessPage> {
     showToast(
       'Access ${access ? 'granted to' : 'revoked of'} ${emails.length} emails',
     );
+  }
+
+  Future<void> _checkAccess() async {
+    final emails = _fetchEmail();
+    for (final email in emails) {
+      if (email.trim().isValidEmail()) {
+        final doc = await authorizedUsers.doc(email.trim()).get();
+        if (doc.exists) {
+          list.add(doc.data());
+        } else {
+          list.add({'email': email.trim(), 'allowAccess': doesntExist});
+          showToast('${email.trim()} doesn\'t exist');
+        }
+      }
+    }
+
+    setState(() {});
+
+    debugPrint(list.toString());
   }
 
   List<String> _fetchEmail() {
